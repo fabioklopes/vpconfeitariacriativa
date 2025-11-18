@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Nova Precificação</h2>
+<form method="post">
+  {% csrf_token %}
+  <div class="mb-3">
+    <label class="form-label">Nome Precificação</label>
+    {{ form.nome_precificacao }}
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Nome Cliente</label>
+    {{ form.nome_cliente }}
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Tema do Projeto</label>
+    {{ form.tema_projeto }}
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Tempo Preparo (min)</label>
+    {{ form.tempo_preparo }}
+    <small class="form-text text-muted">Conversão: <span id="tempo_human">-</span></small>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Rendimento</label>
+    {{ form.rendimento }}
+  </div>
+
+  <h5>Produtos / Insumos</h5>
+  <table class="table table-bordered" id="produtos_table">
+    <thead>
+      <tr>
+        <th>Descrição</th>
+        <th>Qtd Insumo</th>
+        <th>Valor Insumo</th>
+        <th>Qtd Utilizada</th>
+        <th>Custo</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <button type="button" id="add_prod" class="btn btn-outline-secondary">Adicionar linha</button>
+
+  <input type="hidden" name="produtos_json" id="produtos_json">
+  <div class="mt-3">
+    <button class="btn btn-primary">Salvar</button>
+    <a class="btn btn-secondary" href="{% url 'pricing_list' %}">Cancelar</a>
+  </div>
+</form>
+
+<script>
+function updateTempo() {
+  let mins = parseInt($('input[name="tempo_preparo"]').val() || 0);
+  let h = Math.floor(mins/60);
+  let m = mins % 60;
+  $('#tempo_human').text(h? (h+'h '+m+'m') : (m+'m'));
+}
+
+function bindRowEvents(row) {
+  row.find('input').on('input', function(){
+    let qtd_ins = parseFloat(row.find('.qtd_ins').val()||0);
+    let val_ins = parseFloat(row.find('.val_ins').val()||0);
+    let qtd_use = parseFloat(row.find('.qtd_use').val()||0);
+    let custo = (val_ins * (qtd_use / (qtd_ins||1))).toFixed(2);
+    row.find('.custo').text(custo);
+    syncProdutosToJson();
+  });
+}
+
+function addRow(data) {
+  data = data || {descricao:'', qtd_ins:0, val_ins:0, qtd_use:0, custo:0};
+  let row = $('<tr>');
+  row.append('<td><input class="form-control descricao" value="'+data.descricao+'"></td>');
+  row.append('<td><input class="form-control qtd_ins" type="number" step="any" value="'+data.qtd_ins+'"></td>');
+  row.append('<td><input class="form-control val_ins" type="number" step="any" value="'+data.val_ins+'"></td>');
+  row.append('<td><input class="form-control qtd_use" type="number" step="any" value="'+data.qtd_use+'"></td>');
+  row.append('<td class="custo">'+(data.custo||0)+'</td>');
+  row.append('<td><button type="button" class="btn btn-outline-danger btn-sm remove">X</button></td>');
+  $('#produtos_table tbody').append(row);
+  bindRowEvents(row);
+  row.find('.remove').on('click', function(){ row.remove(); syncProdutosToJson(); });
+}
+
+function syncProdutosToJson(){
+  let arr = [];
+  $('#produtos_table tbody tr').each(function(){
+    let r = $(this);
+    arr.push({
+      descricao: r.find('.descricao').val(),
+      qtd_insumo: parseFloat(r.find('.qtd_ins').val()||0),
+      valor_insumo: parseFloat(r.find('.val_ins').val()||0),
+      qtd_utilizada: parseFloat(r.find('.qtd_use').val()||0),
+      custo: parseFloat(r.find('.custo').text()||0)
+    });
+  });
+  $('#produtos_json').val(JSON.stringify(arr));
+}
+
+$(function(){
+  updateTempo();
+  $('input[name="tempo_preparo"]').on('input', updateTempo);
+  $('#add_prod').on('click', function(){ addRow(); });
+  // initialize empty row
+  addRow();
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2>Precificações</h2>
+  <div>
+    <a class="btn btn-outline-success" href="{% url 'pricing_create' %}">Nova Precificação</a>
+  </div>
+</div>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Nome Precificação</th>
+      <th>Cliente</th>
+      <th>Tema</th>
+      <th>Data</th>
+      <th>Tempo</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for p in pricings %}
+    <tr>
+      <td>{{ p.nome_precificacao }}</td>
+      <td>{{ p.nome_cliente }}</td>
+      <td>{{ p.tema_projeto }}</td>
+      <td>{{ p.data_pedido }}</td>
+      <td>{{ p.tempo_human }}</td>
+      <td>
+        <a class="btn btn-outline-primary btn-sm" href="{% url 'pricing_detail' p.pk %}">Ver</a>
+        {% if user.is_authenticated %}
+        <a class="btn btn-outline-secondary btn-sm ms-1" href="{% url 'pricing_edit' p.pk %}">Editar</a>
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6">Nenhuma precificação encontrada.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

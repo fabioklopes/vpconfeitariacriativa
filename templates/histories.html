@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Histórico de Ações</h2>
+<table class="table table-sm">
+  <thead><tr><th>Timestamp</th><th>Usuário</th><th>Ação</th><th>Modelo</th><th>Objeto</th></tr></thead>
+  <tbody>
+    {% for h in logs %}
+    <tr>
+      <td>{{ h.timestamp }}</td>
+      <td>{{ h.user }}</td>
+      <td>{{ h.action }}</td>
+      <td>{{ h.model_name }}</td>
+      <td>{{ h.object_repr }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5">Sem registros</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

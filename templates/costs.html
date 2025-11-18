@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Custos Fixos</h2>
+<table class="table table-sm">
+  <thead><tr><th>Descrição</th><th>Valor Médio</th><th>Mensal</th><th>Diário</th><th>Hora</th><th>Minuto</th></tr></thead>
+  <tbody>
+    {% for c in fixed_costs %}
+    <tr>
+      <td>{{ c.descricao }}</td>
+      <td>{{ c.valor_medio }}</td>
+      <td>{{ c.total_mensal|floatformat:2 }}</td>
+      <td>{{ c.total_diario|floatformat:2 }}</td>
+      <td>{{ c.total_hora|floatformat:4 }}</td>
+      <td>{{ c.total_minuto|floatformat:6 }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6">Nenhum custo cadastrado.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h3>Adicionar Custo Fixo</h3>
+<form method="post">
+  {% csrf_token %}
+  <div class="mb-3">
+    <label class="form-label">Descrição</label>
+    {{ form.descricao }}
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Valor Médio</label>
+    {{ form.valor_medio }}
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Valores (JSON)</label>
+    {{ form.valores }}
+  </div>
+  <button class="btn btn-primary">Salvar</button>
+</form>
+
+<hr />
+<h2>Pró-labore</h2>
+{% if prolabore %}
+<p>Valor mensal: {{ prolabore.valor_mensal }}</p>
+<p>Ganho diário: {{ prolabore.ganho_diario|floatformat:2 }}</p>
+<p>Ganho por hora: {{ prolabore.ganho_hora|floatformat:4 }}</p>
+<p>Ganho por minuto: {{ prolabore.ganho_minuto|floatformat:6 }}</p>
+{% else %}
+<p>Nenhum pró-labore cadastrado.</p>
+{% endif %}
+
+{% endblock %}

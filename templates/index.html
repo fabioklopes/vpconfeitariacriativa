@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="py-5 text-center">
+  <h1>VP Confeitaria Criativa 🧁</h1>
+  <p class="lead">Sistema simples de precificação de projetos para confeitaria.</p>
+  {% if user.is_authenticated %}
+  <p><a class="btn btn-outline-primary" href="{% url 'pricing_list' %}">Ver Precificações</a></p>
+  {% else %}
+  <p><a class="btn btn-outline-primary" href="/admin/login/">Entrar</a> para começar</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>{{ p.nome_precificacao }} - {{ p.nome_cliente }}</h2>
+<p><strong>Tema:</strong> {{ p.tema_projeto }}</p>
+<p><strong>Data:</strong> {{ p.data_pedido }}</p>
+<p><strong>Tempo:</strong> {{ p.tempo_human }}</p>
+<p><strong>Rendimento:</strong> {{ p.rendimento }}</p>
+
+<h5>Produtos</h5>
+<table class="table table-bordered">
+  <thead>
+    <tr><th>Descrição</th><th>Qtd Insumo</th><th>Valor Insumo</th><th>Qtd Utilizada</th><th>Custo</th></tr>
+  </thead>
+  <tbody>
+    {% for it in p.produtos %}
+    <tr>
+      <td>{{ it.descricao }}</td>
+      <td>{{ it.qtd_insumo }}</td>
+      <td>{{ it.valor_insumo }}</td>
+      <td>{{ it.qtd_utilizada }}</td>
+      <td>{{ it.custo }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5">Nenhum produto registrado.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<a class="btn btn-secondary" href="{% url 'pricing_list' %}">Voltar</a>
+{% if user.is_authenticated %}
+<a class="btn btn-outline-secondary ms-2" href="{% url 'pricing_edit' p.pk %}">Editar</a>
+{% endif %}
+{% endblock %}
