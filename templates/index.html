@@ -6,7 +6,7 @@
   {% if user.is_authenticated %}
   <p><a class="btn btn-outline-primary" href="{% url 'pricing_list' %}">Ver Precificações</a></p>
   {% else %}
-  <p><a class="btn btn-outline-primary" href="/admin/login/">Entrar</a> para começar</p>
+  <p><a class="btn btn-outline-primary" href="/admin/login/">Entrar</a></p>
   {% endif %}
 </div>
 {% endblock %}

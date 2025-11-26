@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>{{ recipe.name }}</h2>
+<p><strong>Rendimento:</strong> {{ recipe.yield_amount }} {{ recipe.yield_unit }}</p>
+<p><strong>Tempo de Preparo:</strong> {{ recipe.preparation_time }} minutos</p>
+<p><strong>Valor Final:</strong> R$ {{ recipe.final_value }}</p>
+
+<h5>Ingredientes</h5>
+<table class="table table-bordered">
+  <thead>
+    <tr>
+      <th>Ingrediente</th>
+      <th>Quantidade</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for ingredient in recipe.recipeingredient_set.all %}
+    <tr>
+      <td>{{ ingredient.ingredient.name }}</td>
+      <td>{{ ingredient.quantity }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="2">Nenhum ingrediente registrado.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<a class="btn btn-secondary" href="{% url 'finished_recipe_list' %}">Voltar</a>
+<a class="btn btn-outline-secondary ms-2" href="{% url 'finished_recipe_edit' recipe.pk %}">Editar</a>
+<a class="btn btn-outline-danger ms-2" href="{% url 'finished_recipe_delete' recipe.pk %}">Excluir</a>
+
+{% endblock %}

@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<h2>{% if editing %}Editar Receita{% else %}Nova Receita{% endif %}</h2>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
+            {{ form.name }}
+        </div>
+        <div class="col-md-3">
+            <label for="{{ form.yield_amount.id_for_label }}" class="form-label">{{ form.yield_amount.label }}</label>
+            {{ form.yield_amount }}
+        </div>
+        <div class="col-md-3">
+            <label for="{{ form.yield_unit.id_for_label }}" class="form-label">{{ form.yield_unit.label }}</label>
+            {{ form.yield_unit }}
+        </div>
+    </div>
+    <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="{{ form.preparation_time.id_for_label }}" class="form-label">{{ form.preparation_time.label }}</label>
+                    {{ form.preparation_time }}
+                </div>
+            </div>
+        
+            <hr>
+            <h5>Ingredientes</h5>
+            <table class="table table-bordered" id="ingredients_table">
+                <thead>
+                    <tr>
+                        <th>Ingrediente</th>
+                        <th>Quantidade</th>
+                        <th>Custo Unitário</th>
+                        <th>Custo Total</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            <button type="button" id="add_ingredient" class="btn btn-outline-secondary">Adicionar Ingrediente</button>
+            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#newIngredientModal">
+                Novo Ingrediente
+            </button>
+        
+            <input type="hidden" name="ingredients_json" id="ingredients_json" value="{{ ingredients_json|default:'[]' }}">
+            
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary">Salvar</button>
+                <a class="btn btn-secondary" href="{% url 'finished_recipe_list' %}">Cancelar</a>
+            </div>
+        </form>
+        
+        <!-- Modal para novo ingrediente -->
+        <div class="modal fade" id="newIngredientModal" tabindex="-1" aria-labelledby="newIngredientModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="newIngredientModalLabel">Novo Ingrediente</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="new_ingredient_name" class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="new_ingredient_name">
+                        </div>
+                        <div class="mb-3">
+                            <label for="new_ingredient_qtt_input" class="form-label">Quantidade do Insumo</label>
+                            <input type="number" class="form-control" id="new_ingredient_qtt_input">
+                        </div>
+                        <div class="mb-3">
+                            <label for="new_ingredient_unit_cost" class="form-label">Custo Unitário</label>
+                            <input type="number" class="form-control" id="new_ingredient_unit_cost">
+                        </div>
+                        <div class="mb-3">
+                            <label for="new_ingredient_unit_of_measurement" class="form-label">Unidade de Medida</label>
+                            <select class="form-select" id="new_ingredient_unit_of_measurement">
+                                <option value="litro">Litro</option>
+                                <option value="unidade">Unidade</option>
+                                <option value="quilo">Quilo</option>
+                                <option value="metro">Metro</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                        <button type="button" class="btn btn-primary" id="saveNewIngredient">Salvar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        
+        {{ inputs|json_script:"inputs-data" }}
+        
+        <script>
+        const inputs = JSON.parse(document.getElementById('inputs-data').textContent);
+        
+        function calculateCost(ingredient_id, quantity) {
+            const ingredient = inputs.find(i => i.id == ingredient_id);
+            if (ingredient) {
+                // Ensure qtt_input is not zero to avoid division by zero
+                if (parseFloat(ingredient.qtt_input) > 0) {
+                    return (parseFloat(ingredient.unit_cost) / parseFloat(ingredient.qtt_input)) * parseFloat(quantity);
+                }
+            }
+            return 0;
+        }        
+        function syncIngredientsToJson() {
+            let arr = [];
+            $('#ingredients_table tbody tr').each(function() {
+                let row = $(this);
+                arr.push({
+                    ingredient_id: row.find('.ingredient-select').val(),
+                    quantity: row.find('.quantity-input').val()
+                });
+            });
+            $('#ingredients_json').val(JSON.stringify(arr));
+            updateTotalCost();
+        }
+        
+        function updateTotalCost() {
+            let totalCost = 0;
+            $('#ingredients_table tbody tr').each(function() {
+                let row = $(this);
+                let costText = row.find('.total-cost').text();
+                if (costText) {
+                    let cost = parseFloat(costText.replace('R$ ', ''));
+                    if (!isNaN(cost)) {
+                        totalCost += cost;
+                    }
+                }
+            });
+            $('#total_cost_preview').text(totalCost.toFixed(2));
+        }        
+        function addIngredientRow(data) {
+            data = data || { ingredient_id: null, quantity: 0 };
+            let row = $('<tr>');
+            
+            let select = $('<select class="form-select ingredient-select">');
+            select.append('<option value="">Selecione...</option>');
+            inputs.forEach(input => {
+                select.append(`<option value="${input.id}" ${data.ingredient_id == input.id ? 'selected' : ''}>${input.name}</option>`);
+            });
+            
+            row.append($('<td>').append(select));
+            row.append(`<td><input class="form-control quantity-input" type="number" step="any" value="${data.quantity}"></td>`);
+            row.append('<td class="unit-cost"></td>');
+            row.append('<td class="total-cost"></td>');
+            row.append('<td><button type="button" class="btn btn-outline-danger btn-sm remove">X</button></td>');
+        
+            $('#ingredients_table tbody').append(row);
+            bindRowEvents(row);
+            row.find('.remove').on('click', function() {
+                row.remove();
+                syncIngredientsToJson();
+            });
+            
+            // Trigger change to populate data
+            select.trigger('change');
+        }
+        
+        function bindRowEvents(row) {
+            row.find('select, input').on('input change', function() {
+                let ingredient_id = row.find('.ingredient-select').val();
+                let quantity = row.find('.quantity-input').val();
+                let ingredient = inputs.find(i => i.id == ingredient_id);
+                
+                if (ingredient) {
+                    let unit_cost_per_base_unit = 0;
+                    if (parseFloat(ingredient.qtt_input) > 0) {
+                        unit_cost_per_base_unit = (parseFloat(ingredient.unit_cost) / parseFloat(ingredient.qtt_input));
+                    }
+                    row.find('.unit-cost').text('R$ ' + unit_cost_per_base_unit.toFixed(4));
+                    
+                    let total_cost = calculateCost(ingredient_id, quantity);
+                    row.find('.total-cost').text('R$ ' + total_cost.toFixed(2));
+                } else {
+                    row.find('.unit-cost').text('');
+                    row.find('.total-cost').text('');
+                }
+                syncIngredientsToJson();
+            });
+        }        
+        $('#add_ingredient').on('click', function() {
+            addIngredientRow();
+        });
+        
+        $(document).ready(function() {
+            let initial_ingredients = JSON.parse($('#ingredients_json').val() || '[]');
+            initial_ingredients.forEach(function(ingredient) {
+                addIngredientRow(ingredient);
+            });
+        
+                $('#saveNewIngredient').on('click', function() {
+                    $.ajax({
+                        url: "{% url 'input_api_create' %}",
+                        method: 'POST',
+                        data: {
+                            name: $('#new_ingredient_name').val(),
+                            qtt_input: $('#new_ingredient_qtt_input').val(),
+                            unit_cost: $('#new_ingredient_unit_cost').val(),
+                            unit_of_measurement: $('#new_ingredient_unit_of_measurement').val(),
+                            csrfmiddlewaretoken: $('#newIngredientModal input[name=csrfmiddlewaretoken]').val()
+                        },
+                                    success: function(data) {
+                                        inputs.push(data);
+                                        
+                                        // Update all ingredient dropdowns with the new option
+                                        $('.ingredient-select').each(function() {
+                                            $(this).append(`<option value="${data.id}">${data.name}</option>`);
+                                        });
+                        
+                                        // Add a new row for the newly created ingredient
+                                        addIngredientRow({ingredient_id: data.id, quantity: 0});
+                        
+                                        $('#newIngredientModal').modal('hide');
+                                        // clear modal fields
+                                        $('#new_ingredient_name').val('');
+                                        $('#new_ingredient_qtt_input').val('');
+                                        $('#new_ingredient_unit_cost').val('');
+                                        $('#new_ingredient_unit_of_measurement').val('litro');
+                        
+                                    },                        error: function(xhr, textStatus, errorThrown) {
+                            console.error("Error saving new ingredient:", xhr.responseText);
+                            try {
+                                let errors = JSON.parse(xhr.responseText).errors;
+                                let error_html = "<ul>";
+                                for (let field in errors) {
+                                    error_html += "<li>" + field + ": " + errors[field].join(', ') + "</li>";
+                                }
+                                error_html += "</ul>";
+                                // You can display this in a div inside the modal
+                                alert("Erro ao salvar ingrediente: " + error_html);
+                            } catch (e) {
+                                alert("Erro ao salvar ingrediente: " + xhr.responseText);
+                            }
+                        }
+                    });
+                });        });
+        
+        </script>
+        
+        <div class="mt-3">
+          <h5>Valor Final da Receita</h5>
+          <p>R$ <span id="total_cost_preview">0.00</span></p>
+        </div>
+
+{% endblock %}

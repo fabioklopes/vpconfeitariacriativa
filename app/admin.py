@@ -22,3 +22,17 @@ class ProLaboreAdmin(admin.ModelAdmin):
 class HistoryAdmin(admin.ModelAdmin):
 	list_display = ('timestamp', 'user', 'action', 'model_name', 'object_repr')
 	readonly_fields = ('timestamp',)
+
+
+@admin.register(models.Input)
+class InputAdmin(admin.ModelAdmin):
+	list_display = ('name', 'qtt_input', 'unit_cost', 'unit_of_measurement', 'last_updated')
+	search_fields = ('name',)
+	readonly_fields = ('last_updated',)
+
+
+@admin.register(models.FinishedRecipe)
+class FinishedRecipeAdmin(admin.ModelAdmin):
+	list_display = ('name', 'yield_unit', 'yield_amount', 'preparation_time', 'final_value')
+	search_fields = ('name',)
+	

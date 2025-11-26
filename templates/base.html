@@ -24,6 +24,7 @@
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             {% if user.is_authenticated %}
             <li class="nav-item"><a class="nav-link" href="{% url 'pricing_list' %}">Precificações</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'finished_recipe_list' %}">Receitas Prontas</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'costs' %}">Custos</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'histories' %}">Histórico</a></li>
             {% endif %}
